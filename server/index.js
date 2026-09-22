@@ -1,7 +1,7 @@
 const express = require('express');
-const http = require('http'); // Node native module
+const http = require('http'); // Node native HTTP module
 const cors = require('cors');
-const { Server } = require('socket.io'); // Import Socket.io
+const { Server } = require('socket.io'); // Import Socket.io server
 require('dotenv').config();
 
 const app = express();
@@ -23,16 +23,30 @@ const io = new Server(server, {
   }
 });
 
-// Listen for client handshakes 
+// Listen for client handshakes and events
 io.on('connection', (socket) => {
   console.log(`[Socket] Handshake successful! Client connected: ${socket.id}`);
 
-  // when a client emits send message events
+  // When a client sends a message with sender identity and text
   socket.on('send_message', (payload) => {
-    console.log(`[Server] Message received: ${payload.text}`);
+    console.log(`[Server] Message from ${payload.sender}: ${payload.text}`);
     
-    // io.emit broadcasts message to all clients (including sender)
+    // io.emit broadcasts the payload to all connected clients (including the sender)
     io.emit('receive_message', payload);
+  });
+
+  // Typing Start event: broadcast to everyone except the person typing
+  socket.on('typing', (username) => {
+    socket.broadcast.emit('user_typing', username);
+  });
+
+  // Typing Stop event: broadcast to everyone except the person typing
+  socket.on('stop_asarray', (username) => { // wait, let's keep it exact: 'stop_typing'
+    socket.broadcast.emit('user_stopped_typing', username);
+  });
+
+  socket.on('stop_typing', (username) => {
+    socket.broadcast.emit('user_stopped_typing', username);
   });
 
   // Listen for when a client closes the tab or drops connection
@@ -45,7 +59,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'PulseRoom API with WebSockets' });
 });
 
-// We use server.listen() instead of app.listen() to start BOTH HTTP and WebSockets
+// Start both HTTP and WebSockets on the same port
 server.listen(PORT, () => {
   console.log(`[Server] HTTP & WebSocket pipeline listening on port ${PORT}`);
 });
