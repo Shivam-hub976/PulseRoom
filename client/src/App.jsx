@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
-import { Activity, Send, User, Hash } from "lucide-react"; // NAYA: 'Hash' icon add kiya Room ke liye
+import { Activity, Send, User, Hash } from "lucide-react"; // Included 'Hash' for rooms
 
-const socket = io("http://localhost:5000", {
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+const socket = io(BACKEND_URL, {
   autoConnect: false,
 });
 
