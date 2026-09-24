@@ -209,7 +209,7 @@ function App() {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden space-y-4">
           {chat.length === 0 ? (
             <div className="text-slate-500 text-center mt-10 flex flex-col items-center">
               <Hash size={40} className="mb-2 opacity-50" />
@@ -234,7 +234,7 @@ function App() {
                     </span>
                   )}
                   <div
-                    className={`p-3 max-w-[80%] ${
+                    className={`p-3 max-w-[80%] break-all ${
                       isMe
                         ? "bg-indigo-600 text-white rounded-2xl rounded-tr-sm"
                         : "bg-slate-700 text-slate-100 rounded-2xl rounded-tl-sm"
