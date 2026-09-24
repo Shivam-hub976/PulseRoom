@@ -27,26 +27,32 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log(`[Socket] Handshake successful! Client connected: ${socket.id}`);
 
-  // When a client sends a message with sender identity and text
+  // Listen for room joining
+  socket.on('join_room', (room) => {
+    socket.join(room); // Socket.io method to group sockets into a specific room
+    console.log(`[Socket] Client ${socket.id} joined room: ${room}`);
+  });
+
+  // Update - Send message only to the specific room
   socket.on('send_message', (payload) => {
-    console.log(`[Server] Message from ${payload.sender}: ${payload.text}`);
+    console.log(`[Server] Message in ${payload.room} from  ${payload.sender}: ${payload.text}`);
     
     // io.emit broadcasts the payload to all connected clients (including the sender)
-    io.emit('receive_message', payload);
+    // Deprecated: io.emit('receive_message', payload)
+
+    io.to(payload.room).emit('receive_message', payload);
   });
 
-  // Typing Start event: broadcast to everyone except the person typing
-  socket.on('typing', (username) => {
-    socket.broadcast.emit('user_typing', username);
+  // Update - Typing Start event: broadcast to room only (except sender)
+  socket.on('typing', ({ username, room }) => {
+    // Deprecated: socket.broadcast.emit('user_typing', username);
+    // socket.to(room).emit sends to everyone in the room except the sender
+    socket.to(room).emit('user_typing', username);
   });
 
-  // Typing Stop event: broadcast to everyone except the person typing
-  socket.on('stop_asarray', (username) => { // wait, let's keep it exact: 'stop_typing'
-    socket.broadcast.emit('user_stopped_typing', username);
-  });
-
-  socket.on('stop_typing', (username) => {
-    socket.broadcast.emit('user_stopped_typing', username);
+  // Update : Typing Stop event: broadcast to room only except sender
+  socket.on('stop_typing', ({ username, room }) => {
+    socket.to(room).emit('user_stopped_typing', username);
   });
 
   // Listen for when a client closes the tab or drops connection
